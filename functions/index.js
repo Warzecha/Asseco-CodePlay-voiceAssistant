@@ -7,6 +7,8 @@ const {
   Suggestions,
 } = require('actions-on-google');
 
+const axios = require('axios')
+
 
 const functions = require('firebase-functions');
 
@@ -62,22 +64,102 @@ const app = dialogflow({debug: true});
 
 app.intent('payment', (conv, request) => {
 
-  console.log(request)
-  conv.ask(`You transfered ${request['unit-currency'].amount} ${request['unit-currency'].currency} to ${request['given-name']}`);
-  
+  // console.log(request)
+  const currencyAmount = request['unit-currency'].amount
+  const currency = request['unit-currency'].currency
+  const name = request['given-name']
 
+
+
+  conv.ask(`You want to transfer ${currencyAmount} ${currency} to ${name}. `);
+  
+  const contextParameters = {
+    amount: currencyAmount,
+    currency: currency,
+    name: name
+  };
+  
+  conv.contexts.set('context1', 5, contextParameters);
+  
+  
+  
   conv.ask('What should be the description of the transfer?') 
   });
 
 
 
-
 app.intent('paymentDescription', (conv, request) => {
 
-  console.log(request)
+  const context1 = conv.contexts.get('context1')
+  console.log(context1.parameters)
   
-  conv.end('Allright. Transfer completed.') 
-  });
+  const apiRoot = 'https://peaceful-island-75950.herokuapp.com/payments'
+
+  const payment = {
+    amount: context1.parameters.amount,
+    currency: context1.parameters.currency,
+    name: context1.parameters.name,
+    description: request.desc
+
+  } 
+  console.log(apiRoot)
+  console.log(payment)
+  console.log('requesting resource')
+  return axios.post(apiRoot, payment)
+  .then((res) => {
+    console.log(res)
+    conv.close(`Alright. Transfer of ${context1.parameters.amount} ${context1.parameters.currency} to ${context1.parameters.name} completed.`) 
+
+  })
+  .catch((err) => {
+    console.log(err)
+    conv.close('Transfer failed')
+  })
+
+})
+
+  app.intent('balance', (conv, request) => {
+
+    const apiRoot = 'https://peaceful-island-75950.herokuapp.com/balance'
+
+    return axios.get(apiRoot)
+    .then((response) => {
+      console.log('Checking balance')
+      console.log(response.data)
+      conv.close(`Your account balance is ${response.data.balance}`) 
+
+  })
+  .catch((err) => {
+    console.log(err)
+    conv.close('Transfer failed')
+  })
+   
+
+
+    })
+
+
+
+
+  // return axios
+  //   .get('https://api.nasa.gov/planetary/apod?api_key=SeI7lzqRDvEyGhKnS24CLuLVAIi3MlgPNsGDcIBJ')
+  //       .then((response) => {
+  //           console.log('GET succesful');
+
+  //           // console.log(response.data)
+  //           // let title = response.data.title;
+
+
+  //           // conv.close('Your photo title is: ' + title);
+
+  //           conv.ask('Here is your picture')
+
+  //           })
+
+  
+
+  // // conv.ask('OK')
+  // });
 
 // Handle the Dialogflow intent named 'favorite fake color'.
 // The intent collects a parameter named 'fakeColor'.
