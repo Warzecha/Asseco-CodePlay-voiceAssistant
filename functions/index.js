@@ -37,14 +37,16 @@ app.intent('paymentDescription', (conv, request) => {
     amount: context1.parameters.amount,
     currency: context1.parameters.currency,
     name: context1.parameters.name,
-    description: request.desc
+    description: request.paymentDescription
 
   }
+
+  console.log(payment)
   return axios.post(apiRoot, payment, {
     headers: { "Content-Type": 'application/json' }
   })
     .then((res) => {
-      conv.close(`Alright. Transfer of ${context1.parameters.amount} ${context1.parameters.currency} to ${context1.parameters.name} completed.`)
+      conv.ask(`Alright. Transfer of ${context1.parameters.amount} ${context1.parameters.currency} to ${context1.parameters.name} completed.`)
     })
     .catch((err) => {
       console.log(err)
@@ -58,7 +60,7 @@ app.intent('balance', (conv, request) => {
   const apiRoot = 'https://peaceful-island-75950.herokuapp.com/balance'
   return axios.get(apiRoot)
     .then((response) => {
-      conv.close(`Your account balance is ${response.data.balance}`)
+      conv.ask(`Your account balance is ${response.data.balance} PLN`)
 
     })
     .catch((err) => {
