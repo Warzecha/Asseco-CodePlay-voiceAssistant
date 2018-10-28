@@ -10,4 +10,4 @@ Asseco Code Play hackathon project. Google Assistant Action which allowed users 
 ![Demo 2](/demo/asseco_demo_2.png)
 
 
-![Demo 2](/demo/asseco_demo_2.png)
+![Demo 2](/demo/asseco_demo_3.png)
