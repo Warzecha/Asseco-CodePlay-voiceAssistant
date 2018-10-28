@@ -5,6 +5,8 @@ const {
   BasicCard,
   Permission,
   Suggestions,
+  List,
+  Image
 } = require('actions-on-google');
 
 const axios = require('axios')
@@ -12,7 +14,7 @@ const axios = require('axios')
 
 const functions = require('firebase-functions');
 
-const app = dialogflow({debug: true});
+const app = dialogflow({ debug: true });
 
 
 
@@ -72,19 +74,19 @@ app.intent('payment', (conv, request) => {
 
 
   conv.ask(`You want to transfer ${currencyAmount} ${currency} to ${name}. `);
-  
+
   const contextParameters = {
     amount: currencyAmount,
     currency: currency,
     name: name
   };
-  
+
   conv.contexts.set('context1', 5, contextParameters);
-  
-  
-  
-  conv.ask('What should be the description of the transfer?') 
-  });
+
+
+
+  conv.ask('What should be the description of the transfer?')
+});
 
 
 
@@ -92,7 +94,7 @@ app.intent('paymentDescription', (conv, request) => {
 
   const context1 = conv.contexts.get('context1')
   console.log(context1.parameters)
-  
+
   const apiRoot = 'https://peaceful-island-75950.herokuapp.com/payments'
 
   const payment = {
@@ -101,72 +103,69 @@ app.intent('paymentDescription', (conv, request) => {
     name: context1.parameters.name,
     description: request.desc
 
-  } 
+  }
   console.log(apiRoot)
   console.log(payment)
   console.log('requesting resource')
-  return axios.post(apiRoot, payment)
-  .then((res) => {
-    console.log(res)
-    conv.close(`Alright. Transfer of ${context1.parameters.amount} ${context1.parameters.currency} to ${context1.parameters.name} completed.`) 
+  return axios.post(apiRoot, payment, {
+    headers: { "Content-Type": 'application/json' }
+})
+    .then((res) => {
+      console.log(res)
+      conv.close(`Alright. Transfer of ${context1.parameters.amount} ${context1.parameters.currency} to ${context1.parameters.name} completed.`)
 
-  })
-  .catch((err) => {
-    console.log(err)
-    conv.close('Transfer failed')
-  })
+    })
+    .catch((err) => {
+      console.log(err)
+      conv.close('Transfer failed')
+    })
 
 })
 
-  app.intent('balance', (conv, request) => {
+app.intent('balance', (conv, request) => {
 
-    const apiRoot = 'https://peaceful-island-75950.herokuapp.com/balance'
+  const apiRoot = 'https://peaceful-island-75950.herokuapp.com/balance'
 
-    return axios.get(apiRoot)
+  return axios.get(apiRoot)
     .then((response) => {
       console.log('Checking balance')
       console.log(response.data)
-      conv.close(`Your account balance is ${response.data.balance}`) 
+      conv.close(`Your account balance is ${response.data.balance}`)
 
-  })
-  .catch((err) => {
-    console.log(err)
-    conv.close('Transfer failed')
-  })
-   
-
-
+    })
+    .catch((err) => {
+      console.log(err)
+      conv.close('Transfer failed')
     })
 
 
 
-
-  // return axios
-  //   .get('https://api.nasa.gov/planetary/apod?api_key=SeI7lzqRDvEyGhKnS24CLuLVAIi3MlgPNsGDcIBJ')
-  //       .then((response) => {
-  //           console.log('GET succesful');
-
-  //           // console.log(response.data)
-  //           // let title = response.data.title;
+})
 
 
-  //           // conv.close('Your photo title is: ' + title);
 
-  //           conv.ask('Here is your picture')
+app.intent('lastPayment', (conv, request) => {
 
-  //           })
+  const apiRoot = 'https://peaceful-island-75950.herokuapp.com/last'
 
-  
+  return axios.get(apiRoot)
+    .then((response) => {
+      console.log('Getting last payment')
+      console.log(response.data)
+      
+      conv.close(`Your last payment was ${response.data.cost} ${response.data.currency} to ${response.data.toWhom} with description \"${response.data.name}\"`)
+      
+      
+      
+    })
+    .catch((err) => {
+      console.log(err)
+      conv.close('Transfer failed')
+    })
+    
+})
 
-  // // conv.ask('OK')
-  // });
 
-// Handle the Dialogflow intent named 'favorite fake color'.
-// The intent collects a parameter named 'fakeColor'.
-// app.intent('favorite fake color', (conv, {fakeColor}) => {
-//   // Present user with the corresponding basic card and end the conversation.
-//   conv.close(`Here's the color`, new BasicCard(colorMap[fakeColor]));
-// });
 
 // Set the DialogflowApp object to handle the HTTPS POST request.
 exports.dialogflowFirebaseFulfillment = functions.https.onRequest(app);
